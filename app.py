@@ -1,7 +1,6 @@
 import time
 import jwt
 import streamlit as st
-import asyncio
 import requests
 import speech_recognition as sr
 import re
@@ -20,10 +19,11 @@ API_SECRET = "lfpveQi875IqUIyleBA0YQKE7Llzjg7MjImkEAk3iTvA"
 st.set_page_config(
     page_title="Optimus AI Assistant",
     page_icon="🤖",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# Configure Gemini Pro - Use direct API key instead of secrets
+# Configure Gemini Pro
 GEMINI_API_KEY = "AIzaSyA2GfqpEpwZBmHHbXg07YRKAf1WnalTd0o"
 genai.configure(api_key=GEMINI_API_KEY)
 
@@ -36,125 +36,326 @@ def get_gemini_model():
         st.error(f"Error initializing Gemini Pro: {e}")
         return None
 
-# Black and White custom styling
+# Professional modern styling
 st.markdown("""
 <style>
+    /* Main color scheme */
+    :root {
+        --primary: #0066cc;
+        --primary-light: #3385d6;
+        --secondary: #1a1a1a;
+        --text-light: #f0f0f0;
+        --text-dark: #1a1a1a;
+        --accent: #00aaff;
+        --bg-dark: #121212;
+        --bg-darker: #0a0a0a;
+        --border: #2a2a2a;
+    }
+    
+    /* Global styles */
     body {
-        background-color: #000000;
-        color: #FFFFFF;
+        background-color: var(--bg-darker);
+        color: var(--text-light);
+        font-family: 'Inter', 'Segoe UI', sans-serif;
     }
     .stApp {
-        background-color: #000000;
+        background-color: var(--bg-darker);
     }
+    
+    /* Header styling */
     .main-header {
-        font-size: 42px;
-        font-weight: bold;
-        color: #FFFFFF;
+        font-size: 38px;
+        font-weight: 700;
+        color: var(--text-light);
         text-align: center;
-        margin-bottom: 20px;
+        margin-bottom: 10px;
+        background: linear-gradient(90deg, var(--primary), var(--accent));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
     .sub-header {
-        font-size: 20px;
-        color: #CCCCCC;
+        font-size: 18px;
+        color: #b0b0b0;
         text-align: center;
-        margin-bottom: 30px;
+        margin-bottom: 25px;
+        font-weight: 300;
     }
+    
+    /* Chat container */
     .chat-container {
-        background-color: #121212;
+        background-color: var(--bg-dark);
         padding: 20px;
-        border-radius: 10px;
+        border-radius: 12px;
         margin-bottom: 20px;
-        max-height: 500px;
+        max-height: 550px;
         overflow-y: auto;
-        border: 1px solid #333333;
+        border: 1px solid var(--border);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
-    .model-selector {
-        background-color: #1E1E1E;
-        padding: 10px;
-        border-radius: 5px;
-        margin-bottom: 15px;
-        border: 1px solid #333333;
+    
+    /* Messages styling */
+    .user-message {
+        text-align: right;
+        margin-bottom: 12px;
     }
-    .voice-settings {
-        background-color: #1E1E1E;
-        padding: 10px;
-        border-radius: 5px;
-        margin-bottom: 15px;
-        border: 1px solid #333333;
+    .user-bubble {
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        color: white;
+        padding: 10px 16px;
+        border-radius: 18px 18px 0 18px;
+        display: inline-block;
+        max-width: 80%;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        word-wrap: break-word;
+    }
+    .ai-message {
+        text-align: left;
+        margin-bottom: 12px;
+    }
+    .ai-bubble {
+        background-color: #2a2a2a;
+        color: var(--text-light);
+        padding: 10px 16px;
+        border-radius: 18px 18px 18px 0;
+        display: inline-block;
+        max-width: 80%;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        word-wrap: break-word;
+    }
+    
+    /* Input area */
+    .input-area {
+        background-color: var(--bg-dark);
+        padding: 15px;
+        border-radius: 12px;
+        margin-top: 10px;
+        border: 1px solid var(--border);
     }
     .stTextInput > div > div > input {
-        background-color: #1E1E1E;
-        color: #FFFFFF;
-        border: 1px solid #333333;
+        background-color: #2a2a2a;
+        color: var(--text-light);
+        border: 1px solid #444;
+        border-radius: 8px;
+        padding: 10px 15px;
+        font-size: 16px;
     }
     .stButton > button {
-        background-color: #333333;
-        color: #FFFFFF;
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-weight: 600;
+        transition: all 0.3s ease;
     }
     .stButton > button:hover {
-        background-color: #555555;
+        background: linear-gradient(135deg, var(--primary-light), var(--primary));
+        box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+        transform: translateY(-2px);
     }
-    /* Override Streamlit's default colors */
+    
+    /* Sidebar styling */
     .css-1d391kg, .css-12oz5g7 {
-        background-color: #000000;
+        background-color: var(--bg-dark);
     }
-    .css-1344mvx, .css-13sdm1b {
-        background-color: #121212;
+    .sidebar-header {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--primary);
+        margin-bottom: 15px;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 10px;
     }
+    .setting-panel {
+        background-color: #1a1a1a;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        border: 1px solid var(--border);
+    }
+    
+    /* Spinner and alerts */
     .stSpinner > div {
-        border-top-color: #FFFFFF !important;
+        border-top-color: var(--primary) !important;
     }
     .stAlert {
-        background-color: #1E1E1E;
-        color: #FFFFFF;
+        background-color: #1a1a1a;
+        color: var(--text-light);
+        border-left-color: var(--primary);
+    }
+    
+    /* Status indicator */
+    .status-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 8px;
+        background-color: #00cc66;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0% { opacity: 0.6; }
+        50% { opacity: 1; }
+        100% { opacity: 0.6; }
+    }
+    .status-text {
+        font-size: 14px;
+        color: #b0b0b0;
+    }
+    
+    /* Time badges */
+    .timestamp {
+        font-size: 11px;
+        color: #888;
+        margin: 5px 10px;
+        display: block;
+    }
+    
+    /* Footer styling */
+    .footer {
+        text-align: center;
+        padding: 15px 0;
+        color: #777;
+        font-size: 13px;
+        border-top: 1px solid var(--border);
+        margin-top: 20px;
+    }
+    
+    /* Sliders and controls */
+    .stSlider div[data-baseweb="slider"] div {
+        background-color: #444 !important;
+    }
+    .stSlider div[data-baseweb="slider"] div[role="progressbar"] {
+        background-color: var(--primary) !important;
+    }
+    .stSlider div[data-baseweb="thumb"] {
+        background-color: var(--primary) !important;
+    }
+    .stCheckbox label span[role="checkbox"] {
+        background-color: #333 !important;
+        border-color: #555 !important;
+    }
+    .stCheckbox label span[aria-checked="true"] {
+        background-color: var(--primary) !important;
+        border-color: var(--primary) !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Customized headers
-st.markdown('<div class="main-header">OPTIMUS AI ASSISTANT</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-header">Your intelligent voice and text companion</div>', unsafe_allow_html=True)
+# Professional headers with logo
+st.markdown('''
+<div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+    <svg width="50" height="50" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="100" cy="100" r="90" fill="#0066cc" />
+        <path d="M55 75 L145 75 L145 135 C145 150 130 165 100 165 C70 165 55 150 55 135 Z" fill="#121212" />
+        <circle cx="80" cy="105" r="10" fill="#00aaff" />
+        <circle cx="120" cy="105" r="10" fill="#00aaff" />
+        <path d="M75 130 C75 140 125 140 125 130" stroke="#00aaff" stroke-width="5" fill="none" />
+    </svg>
+    <div style="margin-left: 15px;">
+        <div class="main-header">OPTIMUS AI ASSISTANT</div>
+        <div class="sub-header">Enterprise-Grade Intelligent Voice & Text Companion</div>
+    </div>
+</div>
+''', unsafe_allow_html=True)
+
+# Live status indicator
+st.markdown('''
+<div style="text-align: right; margin-bottom: 10px;">
+    <span class="status-indicator"></span>
+    <span class="status-text">Live & Ready</span>
+    <span style="margin-left: 15px;">''' + datetime.now().strftime("%B %d, %Y | %I:%M %p") + '''</span>
+</div>
+''', unsafe_allow_html=True)
 
 # Initialize session state variables
 if 'chat_history' not in st.session_state:
-    st.session_state.chat_history = [("AI", "Welcome to Optimus AI! I can help you with information, assist with tasks, or just chat. How can I assist you today?")]
+    st.session_state.chat_history = [("AI", "Welcome to Optimus AI! I'm your dedicated AI assistant for all your needs. How may I help you today?")]
 
 if 'gemini_chat' not in st.session_state:
     st.session_state.gemini_chat = None
 
-# Model selection sidebar
+# Model selection sidebar - Enhanced UI
 with st.sidebar:
-    st.markdown("## Model Settings")
+    st.markdown('<div class="sidebar-header">Assistant Configuration</div>', unsafe_allow_html=True)
     
-    st.markdown('<div class="model-selector">', unsafe_allow_html=True)
+    st.markdown('<div class="setting-panel">', unsafe_allow_html=True)
+    st.markdown("#### AI Engine")
     model_choice = st.radio(
-        "Choose AI Model:",
-        ["Default API", "Gemini Pro"],
-        index=1
+        "Select AI Provider:",
+        ["Enterprise API", "Gemini Pro"],
+        index=1,
+        help="Choose the AI model that powers your assistant"
     )
     
-    temperature = st.slider("Response Creativity", min_value=0.0, max_value=1.0, value=0.7, step=0.1)
+    st.markdown("#### Intelligence Settings")
+    temperature = st.slider(
+        "Creativity Level", 
+        min_value=0.0, 
+        max_value=1.0, 
+        value=0.7, 
+        step=0.1,
+        help="Higher values make responses more creative, lower values make them more precise"
+    )
     
-    max_tokens = st.slider("Max Response Length", min_value=50, max_value=2048, value=500, step=50)
+    max_tokens = st.slider(
+        "Response Length", 
+        min_value=100, 
+        max_value=2048, 
+        value=800, 
+        step=50,
+        help="Maximum length of AI responses"
+    )
     st.markdown('</div>', unsafe_allow_html=True)
     
-    st.markdown("## Voice Settings")
-    st.markdown('<div class="voice-settings">', unsafe_allow_html=True)
-    voice_enabled = st.checkbox("Enable Voice Response", value=True)
+    st.markdown('<div class="setting-panel">', unsafe_allow_html=True)
+    st.markdown("#### Voice Configuration")
+    voice_enabled = st.checkbox(
+        "Enable Voice Response", 
+        value=True,
+        help="Turn on/off AI voice responses"
+    )
     
-    voice_speed = st.slider("Voice Speed", min_value=50, max_value=200, value=120, step=10)
-    voice_volume = st.slider("Voice Volume", min_value=0.0, max_value=1.0, value=1.0, step=0.1)
+    voice_speed = st.slider(
+        "Speech Rate", 
+        min_value=80, 
+        max_value=200, 
+        value=140, 
+        step=5,
+        help="Control how fast the AI speaks"
+    )
+    
+    voice_volume = st.slider(
+        "Voice Volume", 
+        min_value=0.1, 
+        max_value=1.0, 
+        value=1.0, 
+        step=0.1,
+        help="Adjust the volume of voice responses"
+    )
     st.markdown('</div>', unsafe_allow_html=True)
-
-# Add current date and time information
-current_time = datetime.now().strftime("%B %d, %Y | %I:%M %p")
-st.markdown(f"<div style='text-align: right; color: #AAAAAA; font-size: 14px;'>{current_time}</div>", unsafe_allow_html=True)
+    
+    # Add client branding section
+    st.markdown('<div class="setting-panel">', unsafe_allow_html=True)
+    st.markdown("#### Client Branding")
+    client_logo = st.file_uploader(
+        "Upload Client Logo", 
+        type=['png', 'jpg', 'jpeg'],
+        help="Add your client's logo to customize the interface"
+    )
+    client_name = st.text_input(
+        "Client Organization",
+        placeholder="Enter client name",
+        help="Display your client's organization name"
+    )
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # Initialize text-to-speech engine
 @st.cache_resource
 def get_tts_engine():
     engine = pyttsx3.init()
-    engine.setProperty("rate", 120)  
+    engine.setProperty("rate", 140)  
     engine.setProperty("volume", 1.0)
     
     # Set Female Voice if available
@@ -194,26 +395,41 @@ def get_voice_input():
 
     with sr.Microphone() as source:
         status_placeholder = st.empty()
-        status_placeholder.info("🎤 Speak now...")
+        status_placeholder.info("🎤 Listening to your voice...")
+        
         try:
+            # Add a short pause to let the recognizer adjust to ambient noise
+            recognizer.adjust_for_ambient_noise(source, duration=0.5)
             audio = recognizer.listen(source, timeout=5, phrase_time_limit=10)
+            status_placeholder.info("🔍 Processing your speech...")
+            
             text = recognizer.recognize_google(audio)
             status_placeholder.empty()
             return text
         except sr.UnknownValueError:
-            status_placeholder.error("Could not understand your voice. Try speaking clearly.")
+            status_placeholder.error("⚠️ Could not understand audio. Please speak clearly and try again.")
+            time.sleep(2)  # Show the error for 2 seconds
+            status_placeholder.empty()
             return None
         except sr.RequestError:
-            status_placeholder.error("Speech recognition request failed. Check your internet connection.")
+            status_placeholder.error("⚠️ Speech recognition service unavailable. Check your internet connection.")
+            time.sleep(2)
+            status_placeholder.empty()
+            return None
+        except Exception as e:
+            status_placeholder.error(f"⚠️ Error: {str(e)}")
+            time.sleep(2)
+            status_placeholder.empty()
             return None
 
 # Function to clean AI response
 def clean_response(response):
-    response = re.sub(r"[*_]", "", response)
+    # Remove markdown formatting that might interfere with speech
+    response = re.sub(r"[*_#]", "", response)
     response = re.sub(r"\s+", " ", response).strip()
     return response
 
-# Function to get response from Gemini Pro
+# Function to get response from Gemini Pro with error handling
 def get_gemini_response(user_input):
     try:
         # Initialize or get existing chat session
@@ -226,20 +442,36 @@ def get_gemini_response(user_input):
         
         # Get response from Gemini
         if st.session_state.gemini_chat:
-            response = st.session_state.gemini_chat.send_message(
-                user_input,
-                generation_config=genai.types.GenerationConfig(
-                    temperature=temperature,
-                    max_output_tokens=max_tokens,
-                )
-            )
-            return response.text
+            # Add robust error handling and retry logic
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    response = st.session_state.gemini_chat.send_message(
+                        user_input,
+                        generation_config=genai.types.GenerationConfig(
+                            temperature=temperature,
+                            max_output_tokens=max_tokens,
+                        )
+                    )
+                    return response.text
+                except Exception as e:
+                    if attempt < max_retries - 1:
+                        time.sleep(1)  # Wait before retrying
+                        continue
+                    else:
+                        raise e
+            
+            return "I apologize, but I'm having trouble connecting to my knowledge base. Please try again in a moment."
         else:
-            return "Gemini model is not available. Please try the default API."
+            return "Gemini model is not available. Please try the Enterprise API instead."
     except Exception as e:
-        return f"Error with Gemini Pro: {e}"
+        error_message = str(e)
+        if "Rate limit" in error_message:
+            return "I've reached my rate limit. Please wait a moment before asking another question."
+        else:
+            return f"I encountered an issue processing your request. Technical details: {error_message}"
 
-# Function to get AI response dynamically from original API
+# Function to get AI response from the default API with improved error handling
 def get_default_api_response(user_input):
     try:
         CHATBOT_API_URL = "http://204.12.227.152:8000/chatbot/send_message"
@@ -255,21 +487,37 @@ def get_default_api_response(user_input):
                                 for role, message in st.session_state.chat_history[-5:]])
             extracted_params["context"] = context
 
+        # Add client identifier if available
+        if client_name:
+            extracted_params["client_name"] = client_name
+
         # Iterate dynamically over all provided query parameters
         for key, value in query_params.items():
             extracted_params[key] = value[0] if isinstance(value, list) else value  # Handle list values
 
-        # Make the API call
-        response = requests.post(CHATBOT_API_URL, headers={"accept": "application/json"}, params=extracted_params)
+        # Set timeout for the request
+        timeout_seconds = 10
+        
+        # Make the API call with timeout
+        response = requests.post(
+            CHATBOT_API_URL, 
+            headers={"accept": "application/json"}, 
+            params=extracted_params,
+            timeout=timeout_seconds
+        )
 
         if response.status_code == 200:
             response_data = response.json()
             cleaned_response = clean_response(response_data.get("actual_response", "No response received."))
             return cleaned_response
         else:
-            return f"Error: Received status code {response.status_code}"
+            return f"I apologize, but I encountered a service error (code {response.status_code}). Please try again."
+    except requests.exceptions.Timeout:
+        return "The request timed out. Our servers might be experiencing high traffic. Please try again in a moment."
+    except requests.exceptions.ConnectionError:
+        return "I'm having trouble connecting to my knowledge base. Please check your internet connection and try again."
     except Exception as e:
-        return f"Error contacting chatbot API: {e}"
+        return f"I encountered an unexpected issue. Technical details: {str(e)}"
 
 # Function to get AI response based on selected model
 def get_ai_response(user_input):
@@ -278,50 +526,67 @@ def get_ai_response(user_input):
     else:
         return get_default_api_response(user_input)
 
-# Function to stream AI voice response
+# Function to speak AI response
 def speak_response(response_text):
     # Add to chat history
     st.session_state.chat_history.append(("AI", response_text))
     
     # Speak the response if voice is enabled
     if voice_enabled:
-        threading.Thread(target=lambda: engine.say(response_text) or engine.runAndWait()).start()
+        # Create a secondary thread to handle speech
+        speech_thread = threading.Thread(target=lambda: engine.say(response_text) or engine.runAndWait())
+        speech_thread.daemon = True  # Allow thread to terminate when main program exits
+        speech_thread.start()
 
-# Display chat history - Modified for black and white theme
+# Display chat history with enhanced UI
 st.markdown('<div class="chat-container">', unsafe_allow_html=True)
-for role, message in st.session_state.chat_history:
+for i, (role, message) in enumerate(st.session_state.chat_history):
+    # Get message timestamp
+    message_time = (datetime.now() - datetime.timedelta(minutes=len(st.session_state.chat_history)-i)).strftime("%I:%M %p")
+    
     if role == "User":
-        st.markdown(f"<div style='text-align: right;'><span style='background-color: #333333; padding: 8px 12px; border-radius: 15px; display: inline-block;'><b>You:</b> {message}</span></div>", unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class="user-message">
+            <div class="user-bubble">{message}</div>
+            <span class="timestamp">{message_time}</span>
+        </div>
+        """, unsafe_allow_html=True)
     else:
-        st.markdown(f"<div style='text-align: left;'><span style='background-color: #1E1E1E; padding: 8px 12px; border-radius: 15px; display: inline-block;'><b>AI:</b> {message}</span></div>", unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class="ai-message">
+            <div class="ai-bubble">{message}</div>
+            <span class="timestamp">{message_time}</span>
+        </div>
+        """, unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Create a form for user input to avoid session state issues
-with st.form(key="message_form", clear_on_submit=True):
-    col1, col2 = st.columns([4, 1])
-    
-    with col1:
-        user_input = st.text_input("Type your message:", key="input_text")
-    
-    with col2:
-        submit_button = st.form_submit_button("Send")
-        
-# Add speak button outside the form
-speak_button = st.button("🎙️ Speak")
+# Create a more professional input area
+st.markdown('<div class="input-area">', unsafe_allow_html=True)
+col1, col2, col3 = st.columns([6, 1, 1])
 
-# Process form submission
-if submit_button and user_input:
+with col1:
+    user_input = st.text_input("", placeholder="Type your message here...", key="input_text")
+
+with col2:
+    speak_button = st.button("🎙️ Speak", key="speak_button")
+
+with col3:
+    send_button = st.button("Send", key="send_button")
+st.markdown('</div>', unsafe_allow_html=True)
+
+# Process user input
+if send_button and user_input:
     # Add to chat history
     st.session_state.chat_history.append(("User", user_input))
     
     # Get AI response
-    with st.spinner("Thinking..."):
+    with st.spinner("Processing your request..."):
         ai_response = get_ai_response(user_input)
         if ai_response:
             speak_response(ai_response)
     
     # Force a rerun to update chat history
-    st.experimental_rerun()
+    st.rerun()
 
 # Process user input from voice button
 if speak_button:
@@ -331,14 +596,19 @@ if speak_button:
         st.session_state.chat_history.append(("User", voice_text))
         
         # Get and display AI response
-        with st.spinner("Thinking..."):
+        with st.spinner("Processing your request..."):
             ai_response = get_ai_response(voice_text)
             if ai_response:
                 speak_response(ai_response)
         
         # Force a rerun to update the chat history display
-        st.experimental_rerun()
+        st.rerun()
 
-# Add footer
-st.markdown("---")
-st.markdown("<div style='text-align: center; color: #888888; font-size: 12px;'>Powered by Optimus AI © 2025 | For assistance contact support@optimusai.com</div>", unsafe_allow_html=True)
+# More professional footer
+client_display = f" | Licensed to {client_name}" if client_name else ""
+st.markdown(f"""
+<div class="footer">
+    <div>Optimus AI Assistant v2.1.0{client_display}</div>
+    <div style="margin-top: 5px;">© 2025 Optimus AI Technologies | <a href="#" style="color: #0066cc; text-decoration: none;">Privacy Policy</a> | <a href="#" style="color: #0066cc; text-decoration: none;">Support</a></div>
+</div>
+""", unsafe_allow_html=True)
