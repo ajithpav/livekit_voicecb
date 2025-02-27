@@ -7,7 +7,7 @@ import re
 import pyttsx3
 import threading
 import google.generativeai as genai
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 
 # LiveKit Server Details
@@ -30,75 +30,117 @@ genai.configure(api_key=GEMINI_API_KEY)
 # Initialize Gemini Pro model
 def get_gemini_model():
     try:
-        model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel('gemini-1.5-pro')  # Updated to a valid model
         return model
     except Exception as e:
         st.error(f"Error initializing Gemini Pro: {e}")
         return None
 
-# Professional modern styling
-st.markdown("""
+# Initialize session state for theme
+if 'dark_mode' not in st.session_state:
+    st.session_state.dark_mode = False
+
+# Dark/Light Mode Toggle
+with st.sidebar:
+    theme_toggle = st.toggle("Dark Mode", value=st.session_state.dark_mode)
+    if theme_toggle != st.session_state.dark_mode:
+        st.session_state.dark_mode = theme_toggle
+        st.rerun()
+
+# Professional modern styling with theme support
+def get_theme_css():
+    if st.session_state.dark_mode:
+        return """
+        /* Dark Theme */
+        :root {
+            --primary: #3cb371;
+            --primary-light: #5cd68d;
+            --secondary: #1a1a1a;
+            --text-light: #f0f0f0;
+            --text-dark: #1a1a1a;
+            --accent: #4eca8b;
+            --bg-dark: #121212;
+            --bg-darker: #0a0a0a;
+            --bg-light: #1e1e1e;
+            --border: #2a2a2a;
+        }
+        
+        /* Global styles */
+        body {
+            background-color: var(--bg-darker);
+            color: var(--text-light);
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+        }
+        .stApp {
+            background-color: var(--bg-darker);
+        }
+        """
+    else:
+        return """
+        /* Light Theme - White with Slight Green */
+        :root {
+            --primary: #3cb371;
+            --primary-light: #5cd68d;
+            --secondary: #333333;
+            --text-light: #ffffff;
+            --text-dark: #333333;
+            --accent: #4eca8b;
+            --bg-dark: #f8f8f8;
+            --bg-darker: #ffffff;
+            --bg-light: #f0f0f0;
+            --border: #e0e0e0;
+        }
+        
+        /* Global styles */
+        body {
+            background-color: var(--bg-darker);
+            color: var(--text-dark);
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+        }
+        .stApp {
+            background-color: var(--bg-darker);
+        }
+        """
+
+# Complete styling with theme variables
+st.markdown(f"""
 <style>
-    /* Main color scheme */
-    :root {
-        --primary: #0066cc;
-        --primary-light: #3385d6;
-        --secondary: #1a1a1a;
-        --text-light: #f0f0f0;
-        --text-dark: #1a1a1a;
-        --accent: #00aaff;
-        --bg-dark: #121212;
-        --bg-darker: #0a0a0a;
-        --border: #2a2a2a;
-    }
-    
-    /* Global styles */
-    body {
-        background-color: var(--bg-darker);
-        color: var(--text-light);
-        font-family: 'Inter', 'Segoe UI', sans-serif;
-    }
-    .stApp {
-        background-color: var(--bg-darker);
-    }
+    {get_theme_css()}
     
     /* Header styling */
-    .main-header {
+    .main-header {{
         font-size: 38px;
         font-weight: 700;
-        color: var(--text-light);
+        color: var(--primary);
         text-align: center;
         margin-bottom: 10px;
-        background: linear-gradient(90deg, var(--primary), var(--accent));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-    .sub-header {
+    }}
+    .sub-header {{
         font-size: 18px;
-        color: #b0b0b0;
+        color: var(--secondary);
         text-align: center;
         margin-bottom: 25px;
         font-weight: 300;
-    }
+    }}
     
     /* Chat container */
-    .chat-container {
-        background-color: var(--bg-dark);
+    .chat-container {{
+        background-color: var(--bg-light);
         padding: 20px;
         border-radius: 12px;
         margin-bottom: 20px;
         max-height: 550px;
         overflow-y: auto;
         border: 1px solid var(--border);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }}
     
     /* Messages styling */
-    .user-message {
+    .user-message {{
         text-align: right;
         margin-bottom: 12px;
-    }
-    .user-bubble {
+    }}
+    .user-bubble {{
         background: linear-gradient(135deg, var(--primary), var(--primary-light));
         color: white;
         padding: 10px 16px;
@@ -107,39 +149,39 @@ st.markdown("""
         max-width: 80%;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         word-wrap: break-word;
-    }
-    .ai-message {
+    }}
+    .ai-message {{
         text-align: left;
         margin-bottom: 12px;
-    }
-    .ai-bubble {
-        background-color: #2a2a2a;
-        color: var(--text-light);
+    }}
+    .ai-bubble {{
+        background-color: var(--bg-dark);
+        color: var(--text-dark);
         padding: 10px 16px;
         border-radius: 18px 18px 18px 0;
         display: inline-block;
         max-width: 80%;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         word-wrap: break-word;
-    }
+    }}
     
     /* Input area */
-    .input-area {
-        background-color: var(--bg-dark);
+    .input-area {{
+        background-color: var(--bg-light);
         padding: 15px;
         border-radius: 12px;
         margin-top: 10px;
         border: 1px solid var(--border);
-    }
-    .stTextInput > div > div > input {
-        background-color: #2a2a2a;
-        color: var(--text-light);
-        border: 1px solid #444;
+    }}
+    .stTextInput > div > div > input {{
+        background-color: var(--bg-dark);
+        color: var(--text-dark);
+        border: 1px solid var(--border);
         border-radius: 8px;
         padding: 10px 15px;
         font-size: 16px;
-    }
-    .stButton > button {
+    }}
+    .stButton > button {{
         background: linear-gradient(135deg, var(--primary), var(--primary-light));
         color: white;
         border: none;
@@ -147,111 +189,112 @@ st.markdown("""
         padding: 10px 20px;
         font-weight: 600;
         transition: all 0.3s ease;
-    }
-    .stButton > button:hover {
+    }}
+    .stButton > button:hover {{
         background: linear-gradient(135deg, var(--primary-light), var(--primary));
-        box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+        box-shadow: 0 4px 12px rgba(60, 179, 113, 0.3);
         transform: translateY(-2px);
-    }
+    }}
     
     /* Sidebar styling */
-    .css-1d391kg, .css-12oz5g7 {
-        background-color: var(--bg-dark);
-    }
-    .sidebar-header {
+    .css-1d391kg, .css-12oz5g7 {{
+        background-color: var(--bg-light);
+    }}
+    .sidebar-header {{
         font-size: 20px;
         font-weight: 600;
         color: var(--primary);
         margin-bottom: 15px;
         border-bottom: 1px solid var(--border);
         padding-bottom: 10px;
-    }
-    .setting-panel {
-        background-color: #1a1a1a;
+    }}
+    .setting-panel {{
+        background-color: var(--bg-light);
         padding: 15px;
         border-radius: 10px;
         margin-bottom: 20px;
         border: 1px solid var(--border);
-    }
+    }}
     
     /* Spinner and alerts */
-    .stSpinner > div {
+    .stSpinner > div {{
         border-top-color: var(--primary) !important;
-    }
-    .stAlert {
-        background-color: #1a1a1a;
-        color: var(--text-light);
+    }}
+    .stAlert {{
+        background-color: var(--bg-light);
+        color: var(--text-dark);
         border-left-color: var(--primary);
-    }
+    }}
     
     /* Status indicator */
-    .status-indicator {
+    .status-indicator {{
         display: inline-block;
         width: 12px;
         height: 12px;
         border-radius: 50%;
         margin-right: 8px;
-        background-color: #00cc66;
+        background-color: var(--primary);
         animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-        0% { opacity: 0.6; }
-        50% { opacity: 1; }
-        100% { opacity: 0.6; }
-    }
-    .status-text {
+    }}
+    @keyframes pulse {{
+        0% {{ opacity: 0.6; }}
+        50% {{ opacity: 1; }}
+        100% {{ opacity: 0.6; }}
+    }}
+    .status-text {{
         font-size: 14px;
-        color: #b0b0b0;
-    }
+        color: var(--secondary);
+    }}
     
     /* Time badges */
-    .timestamp {
+    .timestamp {{
         font-size: 11px;
-        color: #888;
+        color: var(--secondary);
         margin: 5px 10px;
         display: block;
-    }
+    }}
     
     /* Footer styling */
-    .footer {
+    .footer {{
         text-align: center;
         padding: 15px 0;
-        color: #777;
+        color: var(--secondary);
         font-size: 13px;
         border-top: 1px solid var(--border);
         margin-top: 20px;
-    }
+    }}
     
     /* Sliders and controls */
-    .stSlider div[data-baseweb="slider"] div {
-        background-color: #444 !important;
-    }
-    .stSlider div[data-baseweb="slider"] div[role="progressbar"] {
+    .stSlider div[data-baseweb="slider"] div {{
+        background-color: var(--border) !important;
+    }}
+    .stSlider div[data-baseweb="slider"] div[role="progressbar"] {{
         background-color: var(--primary) !important;
-    }
-    .stSlider div[data-baseweb="thumb"] {
+    }}
+    .stSlider div[data-baseweb="slider"] div[data-baseweb="thumb"] {{
         background-color: var(--primary) !important;
-    }
-    .stCheckbox label span[role="checkbox"] {
-        background-color: #333 !important;
-        border-color: #555 !important;
-    }
-    .stCheckbox label span[aria-checked="true"] {
+    }}
+    .stCheckbox label span[role="checkbox"] {{
+        background-color: var(--bg-light) !important;
+        border-color: var(--border) !important;
+    }}
+    .stCheckbox label span[aria-checked="true"] {{
         background-color: var(--primary) !important;
         border-color: var(--primary) !important;
-    }
+    }}
 </style>
 """, unsafe_allow_html=True)
 
 # Professional headers with logo
-st.markdown('''
+logo_color = "#3cb371" if not st.session_state.dark_mode else "#5cd68d"
+st.markdown(f'''
 <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
     <svg width="50" height="50" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="100" cy="100" r="90" fill="#0066cc" />
-        <path d="M55 75 L145 75 L145 135 C145 150 130 165 100 165 C70 165 55 150 55 135 Z" fill="#121212" />
-        <circle cx="80" cy="105" r="10" fill="#00aaff" />
-        <circle cx="120" cy="105" r="10" fill="#00aaff" />
-        <path d="M75 130 C75 140 125 140 125 130" stroke="#00aaff" stroke-width="5" fill="none" />
+        <circle cx="100" cy="100" r="90" fill="{logo_color}" />
+        <path d="M55 75 L145 75 L145 135 C145 150 130 165 100 165 C70 165 55 150 55 135 Z" fill="{('#ffffff' if not st.session_state.dark_mode else '#121212')}" />
+        <circle cx="80" cy="105" r="10" fill="{logo_color}" />
+        <circle cx="120" cy="105" r="10" fill="{logo_color}" />
+        <path d="M75 130 C75 140 125 140 125 130" stroke="{logo_color}" stroke-width="5" fill="none" />
     </svg>
     <div style="margin-left: 15px;">
         <div class="main-header">OPTIMUS AI ASSISTANT</div>
@@ -541,8 +584,9 @@ def speak_response(response_text):
 # Display chat history with enhanced UI
 st.markdown('<div class="chat-container">', unsafe_allow_html=True)
 for i, (role, message) in enumerate(st.session_state.chat_history):
-    # Get message timestamp
-    message_time = (datetime.now() - datetime.timedelta(minutes=len(st.session_state.chat_history)-i)).strftime("%I:%M %p")
+    # Calculate a fake timestamp - fixed the timedelta issue
+    time_offset = len(st.session_state.chat_history) - i
+    message_time = (datetime.now() - timedelta(minutes=time_offset)).strftime("%I:%M %p")
     
     if role == "User":
         st.markdown(f"""
@@ -609,6 +653,6 @@ client_display = f" | Licensed to {client_name}" if client_name else ""
 st.markdown(f"""
 <div class="footer">
     <div>Optimus AI Assistant v2.1.0{client_display}</div>
-    <div style="margin-top: 5px;">© 2025 Optimus AI Technologies | <a href="#" style="color: #0066cc; text-decoration: none;">Privacy Policy</a> | <a href="#" style="color: #0066cc; text-decoration: none;">Support</a></div>
+    <div style="margin-top: 5px;">© 2025 Optimus AI Technologies | <a href="#" style="color: var(--primary); text-decoration: none;">Privacy Policy</a> | <a href="#" style="color: var(--primary); text-decoration: none;">Support</a></div>
 </div>
 """, unsafe_allow_html=True)
