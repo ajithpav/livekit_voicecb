@@ -38,7 +38,7 @@ def get_gemini_model():
 
 # Initialize session state for theme
 if 'dark_mode' not in st.session_state:
-    st.session_state.dark_mode = False
+    st.session_state.dark_mode = True  # Default to dark mode for better UI
 
 # Dark/Light Mode Toggle
 with st.sidebar:
@@ -47,22 +47,23 @@ with st.sidebar:
         st.session_state.dark_mode = theme_toggle
         st.rerun()
 
-# Professional modern styling with theme support
+# Professional modern styling with enhanced theme support
 def get_theme_css():
     if st.session_state.dark_mode:
         return """
-        /* Dark Theme */
+        /* Dark Theme - More Elegant and Professional */
         :root {
-            --primary: #3cb371;
-            --primary-light: #5cd68d;
+            --primary: #4eca8b;
+            --primary-light: #6edba3;
             --secondary: #1a1a1a;
-            --text-light: #f0f0f0;
+            --text-light: #f8f8f8;
             --text-dark: #1a1a1a;
             --accent: #4eca8b;
-            --bg-dark: #121212;
-            --bg-darker: #0a0a0a;
-            --bg-light: #1e1e1e;
-            --border: #2a2a2a;
+            --bg-darker: #121212;
+            --bg-dark: #1e1e1e;
+            --bg-light: #282828;
+            --border: #2d2d2d;
+            --shadow: rgba(0, 0, 0, 0.4);
         }
         
         /* Global styles */
@@ -77,7 +78,7 @@ def get_theme_css():
         """
     else:
         return """
-        /* Light Theme - White with Slight Green */
+        /* Light Theme - White with Premium Green */
         :root {
             --primary: #3cb371;
             --primary-light: #5cd68d;
@@ -85,10 +86,11 @@ def get_theme_css():
             --text-light: #ffffff;
             --text-dark: #333333;
             --accent: #4eca8b;
-            --bg-dark: #f8f8f8;
             --bg-darker: #ffffff;
+            --bg-dark: #f8f8f8;
             --bg-light: #f0f0f0;
             --border: #e0e0e0;
+            --shadow: rgba(0, 0, 0, 0.1);
         }
         
         /* Global styles */
@@ -107,126 +109,164 @@ st.markdown(f"""
 <style>
     {get_theme_css()}
     
-    /* Header styling */
+    /* Header styling - Enhanced with better spacing and visual hierarchy */
     .main-header {{
-        font-size: 38px;
-        font-weight: 700;
+        font-size: 42px;
+        font-weight: 800;
         color: var(--primary);
         text-align: center;
-        margin-bottom: 10px;
+        margin-bottom: 5px;
+        letter-spacing: -0.5px;
+        text-shadow: 0 2px 4px var(--shadow);
     }}
     .sub-header {{
         font-size: 18px;
         color: var(--secondary);
         text-align: center;
         margin-bottom: 25px;
-        font-weight: 300;
+        font-weight: 400;
+        opacity: 0.9;
     }}
     
-    /* Chat container */
+    /* Chat container - More polished with better interactions */
     .chat-container {{
-        background-color: var(--bg-light);
-        padding: 20px;
-        border-radius: 12px;
+        background-color: var(--bg-dark);
+        padding: 25px;
+        border-radius: 16px;
         margin-bottom: 20px;
         max-height: 550px;
         overflow-y: auto;
         border: 1px solid var(--border);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 8px 24px var(--shadow);
+        transition: all 0.3s ease;
+    }}
+    .chat-container:hover {{
+        box-shadow: 0 10px 28px var(--shadow);
     }}
     
-    /* Messages styling */
+    /* Messages styling - Improved with better animations and polish */
     .user-message {{
         text-align: right;
-        margin-bottom: 12px;
+        margin-bottom: 16px;
+        animation: fadeIn 0.3s ease;
     }}
     .user-bubble {{
         background: linear-gradient(135deg, var(--primary), var(--primary-light));
         color: white;
-        padding: 10px 16px;
-        border-radius: 18px 18px 0 18px;
+        padding: 12px 18px;
+        border-radius: 20px 20px 2px 20px;
         display: inline-block;
         max-width: 80%;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
         word-wrap: break-word;
+        font-size: 15px;
+        line-height: 1.5;
+        transition: all 0.2s ease;
+    }}
+    .user-bubble:hover {{
+        box-shadow: 0 5px 12px rgba(0, 0, 0, 0.2);
     }}
     .ai-message {{
         text-align: left;
-        margin-bottom: 12px;
+        margin-bottom: 16px;
+        animation: fadeIn 0.3s ease;
     }}
     .ai-bubble {{
-        background-color: var(--bg-dark);
-        color: var(--text-dark);
-        padding: 10px 16px;
-        border-radius: 18px 18px 18px 0;
+        background-color: var(--bg-light);
+        color: var(--text-light);
+        padding: 12px 18px;
+        border-radius: 20px 20px 20px 2px;
         display: inline-block;
         max-width: 80%;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
         word-wrap: break-word;
+        font-size: 15px;
+        line-height: 1.5;
+        transition: all 0.2s ease;
+    }}
+    .ai-bubble:hover {{
+        box-shadow: 0 5px 12px rgba(0, 0, 0, 0.2);
     }}
     
-    /* Input area */
+    /* Input area - More modern with better interactions */
     .input-area {{
-        background-color: var(--bg-light);
-        padding: 15px;
-        border-radius: 12px;
-        margin-top: 10px;
+        background-color: var(--bg-dark);
+        padding: 20px;
+        border-radius: 16px;
+        margin-top: 15px;
         border: 1px solid var(--border);
+        box-shadow: 0 4px 16px var(--shadow);
+        transition: all 0.3s ease;
+    }}
+    .input-area:hover {{
+        box-shadow: 0 6px 20px var(--shadow);
     }}
     .stTextInput > div > div > input {{
-        background-color: var(--bg-dark);
-        color: var(--text-dark);
+        background-color: var(--bg-light);
+        color: var(--text-light);
         border: 1px solid var(--border);
-        border-radius: 8px;
-        padding: 10px 15px;
+        border-radius: 12px;
+        padding: 14px 18px;
         font-size: 16px;
+        transition: all 0.3s ease;
+    }}
+    .stTextInput > div > div > input:focus {{
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(76, 202, 139, 0.2);
     }}
     .stButton > button {{
         background: linear-gradient(135deg, var(--primary), var(--primary-light));
         color: white;
         border: none;
-        border-radius: 8px;
-        padding: 10px 20px;
+        border-radius: 12px;
+        padding: 12px 24px;
         font-weight: 600;
         transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(60, 179, 113, 0.25);
     }}
     .stButton > button:hover {{
         background: linear-gradient(135deg, var(--primary-light), var(--primary));
-        box-shadow: 0 4px 12px rgba(60, 179, 113, 0.3);
+        box-shadow: 0 6px 16px rgba(60, 179, 113, 0.35);
         transform: translateY(-2px);
     }}
     
     /* Sidebar styling */
     .css-1d391kg, .css-12oz5g7 {{
-        background-color: var(--bg-light);
+        background-color: var(--bg-dark);
     }}
     .sidebar-header {{
-        font-size: 20px;
-        font-weight: 600;
+        font-size: 22px;
+        font-weight: 700;
         color: var(--primary);
-        margin-bottom: 15px;
+        margin-bottom: 18px;
         border-bottom: 1px solid var(--border);
-        padding-bottom: 10px;
+        padding-bottom: 12px;
     }}
     .setting-panel {{
         background-color: var(--bg-light);
-        padding: 15px;
-        border-radius: 10px;
-        margin-bottom: 20px;
+        padding: 18px;
+        border-radius: 14px;
+        margin-bottom: 24px;
         border: 1px solid var(--border);
+        box-shadow: 0 4px 12px var(--shadow);
+        transition: all 0.3s ease;
+    }}
+    .setting-panel:hover {{
+        box-shadow: 0 6px 16px var(--shadow);
     }}
     
-    /* Spinner and alerts */
+    /* Spinner and alerts - More polished and on-brand */
     .stSpinner > div {{
         border-top-color: var(--primary) !important;
     }}
     .stAlert {{
         background-color: var(--bg-light);
-        color: var(--text-dark);
+        color: var(--text-light);
         border-left-color: var(--primary);
+        border-radius: 10px;
     }}
     
-    /* Status indicator */
+    /* Status indicator - More dynamic and professional */
     .status-indicator {{
         display: inline-block;
         width: 12px;
@@ -237,34 +277,40 @@ st.markdown(f"""
         animation: pulse 2s infinite;
     }}
     @keyframes pulse {{
-        0% {{ opacity: 0.6; }}
-        50% {{ opacity: 1; }}
-        100% {{ opacity: 0.6; }}
+        0% {{ opacity: 0.6; transform: scale(0.95); }}
+        50% {{ opacity: 1; transform: scale(1.05); }}
+        100% {{ opacity: 0.6; transform: scale(0.95); }}
+    }}
+    @keyframes fadeIn {{
+        from {{ opacity: 0; transform: translateY(10px); }}
+        to {{ opacity: 1; transform: translateY(0); }}
     }}
     .status-text {{
         font-size: 14px;
         color: var(--secondary);
+        font-weight: 500;
     }}
     
-    /* Time badges */
+    /* Time badges - More elegant */
     .timestamp {{
         font-size: 11px;
         color: var(--secondary);
         margin: 5px 10px;
         display: block;
+        opacity: 0.8;
     }}
     
     /* Footer styling */
     .footer {{
         text-align: center;
-        padding: 15px 0;
+        padding: 20px 0;
         color: var(--secondary);
         font-size: 13px;
         border-top: 1px solid var(--border);
-        margin-top: 20px;
+        margin-top: 30px;
     }}
     
-    /* Sliders and controls */
+    /* Sliders and controls - More on-brand and polished */
     .stSlider div[data-baseweb="slider"] div {{
         background-color: var(--border) !important;
     }}
@@ -282,14 +328,19 @@ st.markdown(f"""
         background-color: var(--primary) !important;
         border-color: var(--primary) !important;
     }}
+    
+    /* Make checkboxes and toggles more professional */
+    button[kind="switchButton"] div[data-baseweb="switch"] {{
+        background-color: var(--primary) !important;
+    }}
 </style>
 """, unsafe_allow_html=True)
 
-# Professional headers with logo
+# Professional headers with enhanced logo
 logo_color = "#3cb371" if not st.session_state.dark_mode else "#5cd68d"
 st.markdown(f'''
-<div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
-    <svg width="50" height="50" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+<div style="display: flex; align-items: center; justify-content: center; margin-bottom: 30px;">
+    <svg width="60" height="60" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
         <circle cx="100" cy="100" r="90" fill="{logo_color}" />
         <path d="M55 75 L145 75 L145 135 C145 150 130 165 100 165 C70 165 55 150 55 135 Z" fill="{('#ffffff' if not st.session_state.dark_mode else '#121212')}" />
         <circle cx="80" cy="105" r="10" fill="{logo_color}" />
@@ -305,10 +356,10 @@ st.markdown(f'''
 
 # Live status indicator
 st.markdown('''
-<div style="text-align: right; margin-bottom: 10px;">
+<div style="text-align: right; margin-bottom: 15px;">
     <span class="status-indicator"></span>
     <span class="status-text">Live & Ready</span>
-    <span style="margin-left: 15px;">''' + datetime.now().strftime("%B %d, %Y | %I:%M %p") + '''</span>
+    <span style="margin-left: 15px; font-weight: 500;">''' + datetime.now().strftime("%B %d, %Y | %I:%M %p") + '''</span>
 </div>
 ''', unsafe_allow_html=True)
 
@@ -318,6 +369,10 @@ if 'chat_history' not in st.session_state:
 
 if 'gemini_chat' not in st.session_state:
     st.session_state.gemini_chat = None
+
+# Initialize voice conversation state
+if 'voice_conversation_active' not in st.session_state:
+    st.session_state.voice_conversation_active = False
 
 # Model selection sidebar - Enhanced UI
 with st.sidebar:
@@ -357,6 +412,7 @@ with st.sidebar:
     voice_enabled = st.checkbox(
         "Enable Voice Response", 
         value=True,
+        key="voice_enabled_checkbox",
         help="Turn on/off AI voice responses"
     )
     
@@ -377,6 +433,26 @@ with st.sidebar:
         step=0.1,
         help="Adjust the volume of voice responses"
     )
+    
+    # Voice chat mode in the voice configuration panel
+    st.markdown("#### Voice Chat Mode")
+    continuous_voice = st.checkbox(
+        "Continuous Voice Conversation", 
+        value=False,
+        key="continuous_voice_checkbox",
+        help="Enable continuous voice conversation where the assistant listens after each response"
+    )
+    
+    if continuous_voice:
+        st.info("Voice conversation mode is ON. Click 'Speak' to start a continuous voice chat. Say 'exit' to end.")
+        # Auto-start voice mode if checkbox is enabled
+        if not st.session_state.voice_conversation_active:
+            st.session_state.voice_conversation_active = True
+            st.rerun()
+    else:
+        # Turn off voice conversation if checkbox is disabled
+        if st.session_state.voice_conversation_active:
+            st.session_state.voice_conversation_active = False
     st.markdown('</div>', unsafe_allow_html=True)
     
     # Add client branding section
@@ -569,17 +645,79 @@ def get_ai_response(user_input):
     else:
         return get_default_api_response(user_input)
 
-# Function to speak AI response
+# Function to speak AI response - FIXED version
 def speak_response(response_text):
     # Add to chat history
     st.session_state.chat_history.append(("AI", response_text))
     
     # Speak the response if voice is enabled
     if voice_enabled:
+        # Clean the response for better speech
+        cleaned_text = clean_response(response_text)
+        
         # Create a secondary thread to handle speech
-        speech_thread = threading.Thread(target=lambda: engine.say(response_text) or engine.runAndWait())
+        def speak_text():
+            try:
+                engine.say(cleaned_text)
+                engine.runAndWait()
+            except Exception as e:
+                st.error(f"Speech error: {str(e)}")
+        
+        speech_thread = threading.Thread(target=speak_text)
         speech_thread.daemon = True  # Allow thread to terminate when main program exits
         speech_thread.start()
+        
+        # Return whether speech was initiated successfully
+        return True
+    return False
+
+# Voice conversation mode function - FIXED version
+def voice_conversation_mode():
+    # Get the current state of voice conversation
+    is_active = st.session_state.voice_conversation_active
+    
+    status_placeholder = st.empty()
+    
+    # Start or continue voice conversation
+    if is_active:
+        status_placeholder.info("🎤 Listening... Say 'exit' or 'stop' to end voice chat.")
+        
+        # Get voice input
+        voice_text = get_voice_input()
+        
+        # Check if user wants to exit voice mode
+        if voice_text and any(exit_word in voice_text.lower() for exit_word in ["exit", "stop", "quit", "end"]):
+            st.session_state.voice_conversation_active = False
+            status_placeholder.success("Voice conversation ended.")
+            time.sleep(1.5)
+            status_placeholder.empty()
+            return
+        
+        # Process valid voice input
+        if voice_text:
+            # Display user message
+            st.session_state.chat_history.append(("User", voice_text))
+            status_placeholder.info("🧠 Thinking...")
+            
+            # Get and display AI response
+            ai_response = get_ai_response(voice_text)
+            if ai_response:
+                status_placeholder.info("🔊 Speaking...")
+                speak_complete = speak_response(ai_response)
+                
+                # Wait for speech to complete before continuing
+                time.sleep(len(clean_response(ai_response).split()) * 0.15)  # Rough estimate of speech duration
+                
+                # Continue voice conversation automatically
+                status_placeholder.empty()
+                st.rerun()
+        else:
+            # Handle no valid voice input
+            status_placeholder.warning("I didn't catch that. Please try again or say 'exit' to stop.")
+            time.sleep(2)
+            status_placeholder.empty()
+            if st.session_state.voice_conversation_active:
+                st.rerun()
 
 # Display chat history with enhanced UI
 st.markdown('<div class="chat-container">', unsafe_allow_html=True)
@@ -632,27 +770,11 @@ if send_button and user_input:
     # Force a rerun to update chat history
     st.rerun()
 
-# Process user input from voice button
+# Process user input from speak button
 if speak_button:
-    voice_text = get_voice_input()
-    if voice_text:
-        # Display user message
-        st.session_state.chat_history.append(("User", voice_text))
-        
-        # Get and display AI response
-        with st.spinner("Processing your request..."):
-            ai_response = get_ai_response(voice_text)
-            if ai_response:
-                speak_response(ai_response)
-        
-        # Force a rerun to update the chat history display
-        st.rerun()
-
-# More professional footer
-client_display = f" | Licensed to {client_name}" if client_name else ""
-st.markdown(f"""
-<div class="footer">
-    <div>Optimus AI Assistant v2.1.0{client_display}</div>
-    <div style="margin-top: 5px;">© 2025 Optimus AI Technologies | <a href="#" style="color: var(--primary); text-decoration: none;">Privacy Policy</a> | <a href="#" style="color: var(--primary); text-decoration: none;">Support</a></div>
-</div>
-""", unsafe_allow_html=True)
+    # If continuous mode is off, just do a single voice interaction
+    if not st.session_state.voice_conversation_active:
+        voice_text = get_voice_input()
+        if voice_text:
+            # Display user message
+            st.session_state.chat_history.append(("User", voice_text))
